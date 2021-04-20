@@ -6,11 +6,11 @@ define('USE_DUMP_FOR_DEBUG','0');
 
 // POTI-board改二 
 // バージョン :
-define('POTI_VER','v2.26.7');
-define('POTI_LOT','lot.210403'); 
+define('POTI_VER','v0.1.1 search');
+define('POTI_LOT','lot.210420'); 
 
 /*
-  (C)sakots >> https://poti-k.info/
+  (C)さとぴあ >> https://github.com/satopian/POTI-board_search_Edition
 
   *----------------------------------------------------------------------------------
   * ORIGINAL SCRIPT
@@ -43,7 +43,7 @@ define('POTI_LOT','lot.210403');
 
 このスクリプトの改造部分に関する質問は「レッツPHP!」
 「ふたば★ちゃんねる」「ぷにゅねっと」に問い合わせないでください。
-ご質問は、<https://poti-k.info/>までどうぞ。
+ご質問は、<https://github.com/satopian/POTI-board_search_Edition>までどうぞ。
 */
 
 if (($phpver = phpversion()) < "5.5.0") {
@@ -250,7 +250,7 @@ switch($mode){
 		if($res){
 			return res($res);
 		}
-		$query=filter_input(INPUT_GET,'q',FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+		$query=filter_input(INPUT_GET,'q');
 
 		if($query){
 			return search();
@@ -425,12 +425,11 @@ function form($resno="",$adminin="",$tmp=""){
 function updatelog(){
 	global $path;
 
-	$fdat['query']='';
+	$_dat['query']='';
 	//ラジオボタンのチェック
-	$fdat['radio_chk1']='checked="checked"';//作者名
-	$fdat['radio_chk2']='';//完全一致
-	$fdat['radio_chk3']='';//本文題名	
-
+	$_dat['radio_chk1']='checked="checked"';//作者名
+	$_dat['radio_chk2']='';//完全一致
+	$_dat['radio_chk3']='';//本文題名	
 
 	$tree = file(TREEFILE);
 	$line = file(LOGFILE);
@@ -438,12 +437,12 @@ function updatelog(){
 	if(!$lineindex){
 		error(MSG019);
 	}
-	array_merge($fdat,form());
+	$_dat=array_merge($_dat,form());
 
 	$counttree = count($tree);//190619
 	for($page=0;$page<$counttree;$page+=PAGE_DEF){//PAGE_DEF単位で全件ループ
 		$oya = 0;	//親記事のメイン添字
-		$dat=$fdat;//form()を何度もコールしない
+		$dat=$_dat;//form()を何度もコールしない
 		for($i = $page; $i < $page+PAGE_DEF; ++$i){//PAGE_DEF分のスレッドを表示
 			if(!isset($tree[$i])){
 				continue;
@@ -648,7 +647,7 @@ function search(){
 
 	$_dat['oya']=[];
 
-	$query=filter_input(INPUT_GET,'q',FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+	$query=filter_input(INPUT_GET,'q');
 	$query=urldecode($query);
 	$query=htmlspecialchars($query,ENT_QUOTES,'utf-8',false);
 	$radio =filter_input(INPUT_GET,'radio',FILTER_VALIDATE_INT);
@@ -679,7 +678,6 @@ function search(){
 	$dat['query_l']=$query_l;
 
 	$page = filter_input(INPUT_GET, 'page',FILTER_VALIDATE_INT);
-	// $search = filter_input(INPUT_GET, 'search');
 	$page=($page===null) ? 0 : $page;
 
 
@@ -689,12 +687,9 @@ function search(){
 	if(!$lineindex){
 		error(MSG019);
 	}
-	// $fdat=form();
-	array_merge($dat,form());
+	$dat=array_merge($dat,form());
 		$oya = 0;	//親記事のメイン添字
-		// $dat=$fdat;//form()を何度もコールしない
-		// for($i = 1; $i < 500; ++$i){//PAGE_DEF分のスレッドを表示
-		foreach($tree as $i =>$val){//ツリー全件ループ
+	foreach($tree as $i =>$val){//ツリー全件ループ
 			if(!isset($tree[$i])){
 				continue;
 			}
@@ -705,14 +700,9 @@ function search(){
 			$j=$lineindex[$disptree]; //該当記事を探して$jにセット
 
 			$res = create_res($line[$j], ['pch' => 1]);
-			$search_oya=(stripos($res['com'],$query)!==false);//親を検索
-
-			$search_oya=($query===''||//空白なら
-			$query!==''&&$radio===3&&stripos($res['com'],$query)!==false||//本文を検索
-			$query!==''&&$radio===3&&stripos($res['sub'],$query)!==false||//題名を検索
-			$query!==''&&($radio===1||$radio===null)&&stripos($res['name'],$query)!==false||//作者名が含まれる
-			$query!==''&&($radio===2&&$res['name']===$query)//作者名完全一致
-			);
+		
+			//検索処理 スレッドの親
+			$search_oya=search_res($res,$query,$radio);
 
 			$res['disp_resform'] = check_elapsed_days($res); // ミニレスフォームの表示有無
 
@@ -772,31 +762,27 @@ function search(){
 				if(!isset($lineindex[$disptree])) continue;
 				$j=$lineindex[$disptree];
 				$_res = create_res($line[$j], ['pch' => 1]);
+				//検索処理 スレッドのレス 
 				if(!$search_res){
-					$search_res=($query===''||//空白なら
-					$query!==''&&$radio===3&&stripos($_res['com'],$query)!==false||//本文を検索
-					$query!==''&&$radio===3&&stripos($_res['sub'],$query)!==false||//題名を検索
-					$query!==''&&($radio===1||$radio===null)&&stripos($_res['name'],$query)!==false||//作者名が含まれる
-					$query!==''&&($radio===2&&$_res['name']===$query)//作者名完全一致
-					);
+					$search_res=search_res($res,$query,$radio);
 				}
 	
 				$rres[$oya][] = $_res;
 			}
-			if($search_oya||$search_res){
+			if($search_oya||$search_res){//親またはレスが検索ヒットしていたら
 
-				$_dat['oya'][$oya] = $res;
+				$_dat['oya'][$oya] = $res;//スレッドの親を配列に入れる
 	
 				// レス記事一括格納
 				if($rres){//レスがある時
-					$_dat['oya'][$oya]['res'] = $rres[$oya];
+					$_dat['oya'][$oya]['res'] = $rres[$oya];//スレッドのレスを配列に入れる
 				}
 	
 				$oya++;
-				if($oya>(120-1)){
+				if($oya>(120-1)){//負荷が気になるので120スレッド以上はブレイク
 					break;
 				}
-		}
+			}
 
 
 		clearstatcache(); //キャッシュをクリア
@@ -804,14 +790,14 @@ function search(){
 	$amount_of_one_page=[];
 	foreach($_dat['oya'] as $k=> $val){//$_dat['oya']にはレスも含まれる
 		if($k>=$page){
-			$amount_of_one_page[]=$val;//1ページ分の検索結果を取得
+			$amount_of_one_page[]=$val;//全検索結果から1ページ分の検索結果を取得
 
 		}	
 		if($k>=$page+PAGE_DEF-1){//1ページ分取得してブレイク
 			break;
 		}
 	}
-	$count_thread=count($_dat['oya']);
+	$count_thread=count($_dat['oya']);//みつかった全スレッドの数
 	$dat['oya']=$amount_of_one_page;
 	$dat['notfound']=false;
 	if(!$count_thread){
@@ -849,7 +835,35 @@ function search(){
 		 htmloutput(SKIN_DIR.MAINFILE,$dat);
 
 }
+//検索処理を関数化
+function search_res($res,$query,$radio){
 
+	$query=mb_convert_kana($query, 'rn', 'UTF-8');
+	$query=str_replace(array(" ", "　"), "", $query);
+	$query=str_replace("〜","～",$query);//波ダッシュを全角チルダに
+
+	if($radio===1||$radio===2||$radio===null){
+		$s_name=mb_convert_kana($res['name'], 'rn', 'UTF-8');//全角英数を半角に
+		$s_name=str_replace(array(" ", "　"), "", $s_name);
+		$s_name=str_replace("〜","～", $s_name);//波ダッシュを全角チルダに
+	}
+	else{
+		$s_sub=mb_convert_kana($res['sub'], 'rn', 'UTF-8');//全角英数を半角に
+		$s_sub=str_replace(array(" ", "　"), "", $s_sub);
+		$s_sub=str_replace("〜","～", $s_sub);//波ダッシュを全角チルダに
+		$s_com=mb_convert_kana($res['com'], 'rn', 'UTF-8');//全角英数を半角に
+		$s_com=str_replace(array(" ", "　"), "", $s_com);
+		$s_com=str_replace("〜","～", $s_com);//波ダッシュを全角チルダに
+	}
+
+	return ($query===''||//空白なら
+	$query!==''&&$radio===3&&stripos($s_com,$query)!==false||//本文を検索
+	$query!==''&&$radio===3&&stripos($s_sub,$query)!==false||//題名を検索
+	$query!==''&&($radio===1||$radio===null)&&stripos($s_name,$query)!==false||//作者名が含まれる
+	$query!==''&&($radio===2&&$s_name===$query)//作者名完全一致
+	);
+
+}
 
 // 自動リンク
 function auto_link($str){
