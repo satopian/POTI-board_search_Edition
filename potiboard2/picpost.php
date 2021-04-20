@@ -1,7 +1,7 @@
 <?php
 //----------------------------------------------------------------------
 // picpost.php lot.210217  by SakaQ >> http://www.punyu.net/php/
-// & sakots >> https://poti-k.info/
+// & さとぴあ >> https://github.com/satopian/POTI-board_search_Edition
 //
 // しぃからPOSTされたお絵かき画像をTEMPに保存
 //

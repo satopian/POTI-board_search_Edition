@@ -1,7 +1,7 @@
 <?php
 /*
   * POTI-board改二 v2.26.6 lot.210320
-  * by sakots >> https://poti-k.info/
+  * by さとぴあ >> https://github.com/satopian/POTI-board_search_Edition
   *
   * POTI-board改二の設定ファイルです。
   *
@@ -16,11 +16,8 @@ $ADMIN_PASS = 'kanripass';
 define('LOG_MAX', '2000');
 
 //テーマ(テンプレート)のディレクトリ。'/'まで
-//themeディレクトリに使いたいtemplateをいれて使ってください。(推奨)
-//別のディレクトリにしたい場合は設定してください。
-//例えばおまけのnee2を使いたい場合は theme_nee2/ とすることができます。初期値は theme/ です。
-define('SKIN_DIR', 'pink2/');
-
+//初期値は pink2// です。
+define('SKIN_DIR', 'pink2/');//検索機能が使えるのはpink2だけです。変更しないでください。
 //メール通知のほか、シェアボタンなどで使用
 //設置場所のURL。phpのあるディレクトリの'/'まで
 define('ROOT_URL', 'http://example.com/oekaki/');

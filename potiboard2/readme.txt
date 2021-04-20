@@ -1,13 +1,13 @@
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  POTI-board改二
-  by sakots >> https://poti-k.info/
+  POTI-board改二スレッド検索対応版
+  by さとぴあ >> https://github.com/satopian/POTI-board_search_Edition
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 このスクリプトは「ぷにゅねっと」 http://www.punyu.net/php/ の
 POTI-board v1.32 をさらにphp7に対応させて改造した
-POTI-board改 https://poti-k.info/ を発展させたものです。
+POTI-board改 https://github.com/satopian/POTI-board_search_Edition を発展させたものです。
 
 「Skinny.php」 http://skinny.sx68.net/ 
 のおかげで、自由にデザインできるようになってます。
