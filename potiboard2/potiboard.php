@@ -6,8 +6,8 @@ define('USE_DUMP_FOR_DEBUG','0');
 
 // POTI-board改二 
 // バージョン :
-define('POTI_VER','v0.1.1 search');
-define('POTI_LOT','lot.210420'); 
+define('POTI_VER','v0.1.2 search');
+define('POTI_LOT','lot.210703'); 
 
 /*
   (C)さとぴあ >> https://github.com/satopian/POTI-board_search_Edition
@@ -701,9 +701,6 @@ function search(){
 
 			$res = create_res($line[$j], ['pch' => 1]);
 		
-			//検索処理 スレッドの親
-			$search_oya=search_res($res,$query,$radio);
-
 			$res['disp_resform'] = check_elapsed_days($res); // ミニレスフォームの表示有無
 
 			// ミニフォーム用
@@ -756,20 +753,20 @@ function search(){
 			$rres=array();
 			$search_res=false;
 			foreach($treeline as $k => $disptree){
-				if($k<$s){//レス表示件数
-					continue;
-				}
+
 				if(!isset($lineindex[$disptree])) continue;
 				$j=$lineindex[$disptree];
 				$_res = create_res($line[$j], ['pch' => 1]);
 				//検索処理 スレッドのレス 
-				if(!$search_res){
-					$search_res=search_res($res,$query,$radio);
+				
+				$search_res=$search_res ? true : search_res($res,$query,$radio);
+				if($k>=$s){//レス表示件数
+					$rres[$oya][] = $_res;
 				}
-	
-				$rres[$oya][] = $_res;
 			}
-			if($search_oya||$search_res){//親またはレスが検索ヒットしていたら
+	
+			
+			if($search_res){//親またはレスが検索ヒットしていたら
 
 				$_dat['oya'][$oya] = $res;//スレッドの親を配列に入れる
 	
@@ -811,23 +808,38 @@ function search(){
 			$dat['prev'] = ($prev == 0) ? PHP_SELF.$query_l : '?page='.$prev.$query_l;
 		}
 		$paging = "";
+		for($l = 0; $l < $count_thread; $l += (PAGE_DEF*35)){
 
+			$start_page=$l;
+			$end_page=$l+(PAGE_DEF*36);//現在のページよりひとつ後ろのページ
+			if($page-(PAGE_DEF*35)<=$l){break;}//現在ページより1つ前のページ
+		}
+	
 		$dat['paging']=false;
-		//表示しているページが20ページ以上または投稿数が少ない時はページ番号のリンクを制限しない
-		$showAll = ($count_thread <= PAGE_DEF * 21 || $page >= PAGE_DEF*21);
-		for($i = 0; $i < ($showAll ? $count_thread : PAGE_DEF * 22); $i += PAGE_DEF){
+		for($i = 0; $i < $count_thread; $i += PAGE_DEF){
 			$pn = $i ? $i / PAGE_DEF : 0; // page_number
+			if(($i>=$start_page)&&($i<=$end_page)){//ページ数を表示する範囲
+				if($i === $end_page){//特定のページに代入される記号 エンド
+					$rep_page_no="≫";
+				}elseif($i!==0&&$i == $start_page){//スタート
+					$rep_page_no="≪";
+				}else{//ページ番号
+					$rep_page_no=$pn;
+				}
+
+
 			$paging .= ($page === $i)
-				? str_replace("<PAGE>", $pn, NOW_PAGE) // 現在ページにはリンクを付けない
-				: str_replace("<PURL>", ($i ? PHP_SELF."?page=".$i.$query_l:PHP_SELF."?page=0".$query_l),
-					str_replace("<PAGE>", $i ? ($showAll || ($i !== PAGE_DEF * 21) ? $pn : "≫") : $pn, OTHER_PAGE));
+			? str_replace("<PAGE>", $pn, NOW_PAGE) // 現在ページにはリンクを付けない
+			: str_replace("<PURL>", ($i ? PHP_SELF."?page=".$i.$query_l : PHP_SELF."?page=0".$query_l),
+			str_replace("<PAGE>", $rep_page_no , OTHER_PAGE));
+
 					$dat['paging'] = $paging;
 					if($oya >= PAGE_DEF && $count_thread > $next){
 						$dat['next'] = PHP_SELF.'?page='.$next.$query_l;
 					}
-		}
 
-		//改ページ分岐ここまで
+				}
+		}
 
 
 		$dat['resform'] = RES_FORM ? true : false;
