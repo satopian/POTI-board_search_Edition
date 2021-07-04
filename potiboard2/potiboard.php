@@ -6,7 +6,7 @@ define('USE_DUMP_FOR_DEBUG','0');
 
 // POTI-board改二 
 // バージョン :
-define('POTI_VER','v0.1.2 search');
+define('POTI_VER','v0.1.3 search');
 define('POTI_LOT','lot.210703'); 
 
 /*
@@ -693,8 +693,21 @@ function search(){
 			if(!isset($tree[$i])){
 				continue;
 			}
+		$treeline = explode(",", rtrim($tree[$i]));
+		$search_res=false;
+		foreach($treeline as $k => $disptree){
+			if(!isset($lineindex[$disptree])) continue;
+				$j=$lineindex[$disptree];
+				$_res = create_res($line[$j], ['pch' => 1]);
+				//検索処理 
+			if($search_res=search_res($_res,$query,$radio)){
+				break;//検索語句がスレッドにあったら
+			}
+		}
+		if(!$search_res){
+			continue;//スレッドに検索語句がなかったら次のループへ
+		}
 
-			$treeline = explode(",", rtrim($tree[$i]));
 			$disptree = $treeline[0];
 			if(!isset($lineindex[$disptree])) continue;   //範囲外なら次の行
 			$j=$lineindex[$disptree]; //該当記事を探して$jにセット
@@ -748,38 +761,28 @@ function search(){
 			$res['limit'] = ($lineindex[$res['no']] >= $logmax * LOG_LIMIT / 100) ? true : false; // そろそろ消える。
 			$res['skipres'] = $skipres ? $skipres : false;
 			$res['resub'] = $resub;
+			$_dat['oya'][$oya] = $res;//スレッドの親を配列に入れる
 			
 			//レス作成
 			$rres=array();
-			$search_res=false;
 			foreach($treeline as $k => $disptree){
-
+				if($k<$s){//レス表示件数
+					continue;
+				}
 				if(!isset($lineindex[$disptree])) continue;
 				$j=$lineindex[$disptree];
-				$_res = create_res($line[$j], ['pch' => 1]);
-				//検索処理 スレッドのレス 
-				
-				$search_res=$search_res ? true : search_res($res,$query,$radio);
-				if($k>=$s){//レス表示件数
-					$rres[$oya][] = $_res;
-				}
+				$res = create_res($line[$j], ['pch' => 1]);
+				$rres[$oya][] = $res;
+			}
+			// レス記事一括格納
+			if($rres){//レスがある時
+				$_dat['oya'][$oya]['res'] = $rres[$oya];//スレッドのレスを配列に入れる
 			}
 	
-			
-			if($search_res){//親またはレスが検索ヒットしていたら
-
-				$_dat['oya'][$oya] = $res;//スレッドの親を配列に入れる
-	
-				// レス記事一括格納
-				if($rres){//レスがある時
-					$_dat['oya'][$oya]['res'] = $rres[$oya];//スレッドのレスを配列に入れる
-				}
-	
-				$oya++;
-				if($oya>(120-1)){//負荷が気になるので120スレッド以上はブレイク
-					break;
-				}
+			if($oya>=(120-1)){//負荷が気になるので120スレッド以上はブレイク
+				break;
 			}
+			$oya++;
 
 
 		clearstatcache(); //キャッシュをクリア
