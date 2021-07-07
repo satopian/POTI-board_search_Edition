@@ -787,16 +787,17 @@ function search(){
 
 		clearstatcache(); //キャッシュをクリア
 	}
-	$amount_of_one_page=[];
-	foreach($_dat['oya'] as $k=> $val){//$_dat['oya']にはレスも含まれる
-		if($k>=$page){
-			$amount_of_one_page[]=$val;//全検索結果から1ページ分の検索結果を取得
+	$amount_of_one_page=array_slice($_dat['oya'], $page, PAGE_DEF, false);//1ページ分の配列を抽出
+	// $amount_of_one_page=[];
+	// foreach($_dat['oya'] as $k=> $val){//$_dat['oya']にはレスも含まれる
+	// 	if($k>=$page){
+	// 		$amount_of_one_page[]=$val;//全検索結果から1ページ分の検索結果を取得
 
-		}	
-		if($k>=$page+PAGE_DEF-1){//1ページ分取得してブレイク
-			break;
-		}
-	}
+	// 	}	
+	// 	if($k>=$page+PAGE_DEF-1){//1ページ分取得してブレイク
+	// 		break;
+	// 	}
+	// }
 	$count_thread=count($_dat['oya']);//みつかった全スレッドの数
 	$dat['oya']=$amount_of_one_page;
 	$dat['notfound']=false;
